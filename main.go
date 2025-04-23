@@ -33,7 +33,7 @@ func main() {
 		Start1:
 			for {
 				var chose int
-				log.Printf("请选择你的连接方式：1---进入聊天  2---私人链接 \n")
+				log.Printf("请选择你的连接方式：1---进入聊天室  2---私人链接 \n")
 				fmt.Scanln(&chose)
 				if !(chose != 1 || chose != 2) {
 					log.Println("输入有误，请重新输入：")

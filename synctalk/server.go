@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 type Server struct {
@@ -19,10 +20,17 @@ func (s *Server) DifferentServer(chat *ChatRoom, chose int) {
 	switch chose {
 	case 1:
 		//私人聊天：
-		go s.StartPrivateServer()
+		go func() {
+			s.StartPrivateServer()
+			StartPrivateClient(s.Ip, s.Port)
+		}()
+
 	case 2:
 		//聊天室
-		go s.StartChatRoom(chat)
+		go func() {
+			s.StartChatRoom(chat)
+			JoinChatRoom(s.Ip)
+		}()
 	}
 
 	//堵塞主线程
@@ -56,6 +64,7 @@ func HandlePrivate(conn net.Conn) {
 	}()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
+		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 		text := scanner.Text()
 		_, err := conn.Write([]byte(text + "\n"))
 		if err != nil {

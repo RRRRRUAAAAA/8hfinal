@@ -7,6 +7,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 )
 
 type ChatRoom struct {
@@ -36,6 +37,7 @@ func (chat *ChatRoom) AskName(conn net.Conn) string {
 	conn.Write([]byte("请输入你的用户名"))
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
+		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 		text := scanner.Text()
 		return text
 
@@ -55,10 +57,11 @@ Start1:
 	conn.Write([]byte("请输入您想输入的内容"))
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
+		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 		msg := scanner.Text()
 		if strings.HasPrefix(msg, "@") {
 			//私聊逻辑
-			split := strings.SplitN(msg, "", 2)
+			split := strings.SplitN(msg, " ", 2)
 			if len(split) < 2 {
 				conn.Write([]byte("输入有误，正确的格式是: @用户名 内容\n"))
 				goto Start1
@@ -103,10 +106,11 @@ func (chat *ChatRoom) PrivateMessage(sender net.Conn, msg string, toName string)
 			found = true
 			log.Println("发送成功")
 			break
-		} else if found == false {
-			sender.Write([]byte("没有用户或者该用户未上线"))
-			log.Printf("发送私聊消息失败")
-			break
 		}
+	}
+	if found == false {
+		sender.Write([]byte("没有用户或者该用户未上线"))
+		log.Printf("发送私聊消息失败")
+
 	}
 }
