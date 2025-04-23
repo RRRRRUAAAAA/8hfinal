@@ -3,14 +3,33 @@ package synctalk
 import (
 	"8hfinal/utils"
 	"bufio"
+	"fmt"
 	"log"
 	"net"
 	"os"
 )
 
-func StartClient(ip string) {
-	//建立和服务器的链接
+// 加入聊天室
+func JoinChatRoom(ip string) {
 	conn, err := net.Dial("tcp", ip+":8080")
+	if err != nil {
+		log.Println("连接失败:", err)
+		return
+	}
+	log.Println("成功链接到服务器")
+	defer conn.Close()
+
+	go func(conn2 net.Conn) {
+		chatroom := NewChat()
+		chatroom.Join(conn2)
+	}(conn)
+
+}
+
+// 进入和服务器的私人聊天
+func StartPrivateClient(ip string, port int) {
+	//建立和服务器的链接
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", ip, port))
 	if err != nil {
 		log.Println("连接失败:", err)
 	}
