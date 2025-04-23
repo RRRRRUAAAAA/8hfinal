@@ -14,20 +14,21 @@ func main() {
 	//server := NewServer("127.0.0.1", 8080)
 	//go server.Start()
 	//testClient()
-
+Start:
 	fmt.Printf("选择模式 ：1---服务端 ，2---客户端")
 	var mode int
 	var ip string
 	fmt.Scanln(&mode)
-	for {
-		if mode == 1 {
-			server := synctalk.NewServer("0.0.0.0", 8080)
-			server.StartServer()
-		} else if mode == 2 {
-			fmt.Scanln(&ip)
-			synctalk.StartClient(ip)
-		} else {
-			log.Println("您输入的值是非法的，麻烦输入1或2")
-		}
+
+	if mode == 1 {
+		server := synctalk.NewServer("0.0.0.0", 8080)
+		server.StartServer()
+	} else if mode == 2 {
+		fmt.Scanln(&ip)
+		synctalk.StartClient(ip)
+	} else {
+		log.Println("您输入的值是非法的，麻烦输入1或2")
+		goto Start
+
 	}
 }

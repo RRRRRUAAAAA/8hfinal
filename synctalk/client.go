@@ -23,6 +23,7 @@ func StartClient(ip string) {
 			msg, err := utils.ReadMessages(conn)
 			if err != nil {
 				log.Println("连接断开")
+				return
 			}
 			log.Println("收到服务器发来的消息：", msg)
 		}
