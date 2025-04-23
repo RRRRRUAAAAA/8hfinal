@@ -15,24 +15,32 @@ type Server struct {
 	Port int
 }
 
-func (s *Server) DifferentServer(chat *ChatRoom, chose int) {
+func (s *Server) DifferentServer() {
+	var chose int
+START:
+	log.Println("请选择您想要进行聊天的方式： 1---私人聊天 2---聊天室")
+	fmt.Scanln(&chose)
+	for {
+		switch chose {
+		case 1:
+			//私人聊天：
+			go func() {
+				s.StartPrivateServer()
 
-	switch chose {
-	case 1:
-		//私人聊天：
-		go func() {
-			s.StartPrivateServer()
-			StartPrivateClient(s.Ip, s.Port)
-		}()
+			}()
 
-	case 2:
-		//聊天室
-		go func() {
-			s.StartChatRoom(chat)
-			JoinChatRoom(s.Ip)
-		}()
+		case 2:
+			//聊天室
+			go func() {
+				chat := NewChat()
+				s.StartChatRoom(chat)
+
+			}()
+		default:
+			goto START
+		}
+
 	}
-
 	//堵塞主线程
 	select {}
 }
