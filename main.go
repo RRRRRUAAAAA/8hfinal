@@ -15,7 +15,7 @@ func main() {
 	fmt.Scanln(&chose)
 	switch chose {
 	case 1:
-		server := synctalk.NewServer("0.0.0.0", 8080)
+		server := synctalk.NewServer("0.0.0.0", 9091)
 		server.DifferentServer()
 	case 2:
 		synctalk.ClientChose()

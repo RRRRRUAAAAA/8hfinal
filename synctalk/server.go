@@ -7,8 +7,13 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"time"
 )
+
+var privateServerStarted bool
+var mu sync.Mutex
+var chatroomStarted bool
 
 type Server struct {
 	Ip   string
@@ -18,20 +23,32 @@ type Server struct {
 func (s *Server) DifferentServer() {
 	var chose int
 START:
-	log.Println("请选择您想要进行聊天的方式： 1---私人聊天 2---聊天室")
+	log.Println("请选择服务器的程序： 1---私人聊天 2---聊天室")
 	fmt.Scanln(&chose)
 	for {
+
 		switch chose {
 		case 1:
 			//私人聊天：
+			mu.Lock()
 			go func() {
+				if privateServerStarted {
+					log.Println("私人服务器已经启动")
+					mu.Unlock()
+				}
+				privateServerStarted = true
 				s.StartPrivateServer()
-
 			}()
 
 		case 2:
 			//聊天室
 			go func() {
+				mu.Lock()
+				if chatroomStarted {
+					log.Println("私人服务器已经启动")
+					mu.Unlock()
+				}
+				chatroomStarted = true
 				chat := NewChat()
 				s.StartChatRoom(chat)
 
@@ -41,13 +58,9 @@ START:
 		}
 
 	}
-	//堵塞主线程
-	select {}
+
 }
-func NewServerEmpty() *Server {
-	s := new(Server)
-	return s
-}
+
 func NewServer(ip string, port int) *Server {
 	s := new(Server)
 	s.Port = port
@@ -84,12 +97,17 @@ func HandlePrivate(conn net.Conn) {
 
 // 开启聊天室
 func (s *Server) StartChatRoom(chatroom *ChatRoom) {
-	ln, err := net.Listen("tcp", fmt.Sprintf("%s,%d", s.Ip, s.Port))
+	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", s.Ip, s.Port))
 	if err != nil {
 		log.Println("聊天室监听失败:", err)
 		return
 	}
-	defer ln.Close()
+	defer func(ln net.Listener) {
+		err := ln.Close()
+		if err != nil {
+
+		}
+	}(ln)
 	log.Println("聊天室服务已经启动")
 	for {
 		conn, err := ln.Accept()
@@ -108,7 +126,13 @@ func (s *Server) StartPrivateServer() {
 	//建立监听器
 
 	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", s.Ip, s.Port))
-	defer ln.Close()
+	defer func(ln net.Listener) {
+		err := ln.Close()
+		if err != nil {
+			log.Println("监听器出现错误：", err)
+			return
+		}
+	}(ln)
 	if err != nil {
 		log.Println("监听器出现错误：", err)
 		return
