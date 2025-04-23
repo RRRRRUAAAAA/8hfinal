@@ -13,17 +13,37 @@ import (
 // 加入聊天室
 func JoinChatRoom(ip string) {
 	conn, err := net.Dial("tcp", ip+":8080")
+
+	readScanner := bufio.NewScanner(conn)
 	if err != nil {
 		log.Println("连接失败:", err)
 		return
 	}
 	log.Println("成功链接到服务器")
 
-	go func(conn2 net.Conn) {
-		chatroom := NewChat()
-		chatroom.Join(conn2)
-	}(conn)
+	if readScanner.Scan() {
+		fmt.Printf(readScanner.Text())
+	}
+	//读取用户名并发送
 
+	writeScanner := bufio.NewScanner(os.Stdin)
+	user := writeScanner.Text()
+	if user != "" {
+		conn.Write([]byte(user + "\n"))
+	}
+
+	//收消息
+
+	go func() {
+		for readScanner.Scan() {
+			println(readScanner.Text())
+		}
+	}()
+
+	//平时发消息
+	for writeScanner.Scan() {
+		conn.Write([]byte(writeScanner.Text() + "\n"))
+	}
 }
 
 // 进入和服务器的私人聊天
@@ -66,23 +86,23 @@ func ClientChose() {
 START:
 	log.Println("请选择您想要进行聊天的方式： 1---私人聊天 2---聊天室")
 	fmt.Scanln(&chose)
-	for {
-		switch chose {
-		case 1:
 
-			log.Println("请输入您想要访问的服务器地址：")
-			fmt.Scanln(&ip)
-			StartPrivateClient(ip, port)
+	switch chose {
 
-		case 2:
+	case 1:
+		for {
 			log.Println("请输入您想要访问的服务器地址：")
 			fmt.Scanln(&ip)
 			log.Println("请输入您要访问的端口")
 			fmt.Scanln(&port)
-			JoinChatRoom(ip)
-		default:
-			goto START
+			StartPrivateClient(ip, port)
 		}
+	case 2:
+		log.Println("请输入您想要访问的服务器地址：")
+		fmt.Scanln(&ip)
+		JoinChatRoom(ip)
+	default:
+		goto START
 
 	}
 }

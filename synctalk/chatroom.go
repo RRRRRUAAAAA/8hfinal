@@ -23,18 +23,22 @@ func NewChat() *ChatRoom {
 func (chat *ChatRoom) Join(conn net.Conn) {
 
 	name := chat.AskName(conn) //询问姓名
+
+	log.Println("检查赋值是否成功：", chat.clients[conn])
 	chat.mu.Lock()
 	chat.clients[conn] = name //为新来的用户赋值姓名
+	println(chat.clients[conn])
 	chat.mu.Unlock()
 
 	chat.BroadCast(conn, fmt.Sprintf("%s 加入聊天室", name)) //广播告知该用户加入聊天室
 
 	go chat.HandleMessage(conn, name)
+	defer log.Println("用户退出聊天室")
 }
 
 // 用来得到用户输入的名字
 func (chat *ChatRoom) AskName(conn net.Conn) string {
-	conn.Write([]byte("请输入你的用户名"))
+	conn.Write([]byte("请输入你的用户名\n"))
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
 		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
@@ -54,7 +58,7 @@ func (chat *ChatRoom) HandleMessage(conn net.Conn, name string) {
 		}
 	}(conn)
 Start1:
-	conn.Write([]byte("请输入您想输入的内容"))
+	conn.Write([]byte("请输入您想输入的内容\n"))
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
 		conn.SetReadDeadline(time.Now().Add(30 * time.Second))

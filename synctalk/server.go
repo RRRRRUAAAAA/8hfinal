@@ -45,7 +45,7 @@ START:
 			go func() {
 				mu.Lock()
 				if chatroomStarted {
-					log.Println("私人服务器已经启动")
+					log.Println("聊天室已经启动")
 					mu.Unlock()
 				}
 				chatroomStarted = true
