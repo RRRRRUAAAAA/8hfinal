@@ -25,39 +25,37 @@ func (s *Server) DifferentServer() {
 START:
 	log.Println("请选择服务器的程序： 1---私人聊天 2---聊天室")
 	fmt.Scanln(&chose)
-	for {
 
-		switch chose {
-		case 1:
-			//私人聊天：
+	switch chose {
+	case 1:
+		//私人聊天：
+		mu.Lock()
+		go func() {
+			if privateServerStarted {
+				log.Println("私人服务器已经启动")
+				mu.Unlock()
+			}
+			privateServerStarted = true
+			s.StartPrivateServer()
+		}()
+
+	case 2:
+		//聊天室
+		go func() {
 			mu.Lock()
-			go func() {
-				if privateServerStarted {
-					log.Println("私人服务器已经启动")
-					mu.Unlock()
-				}
-				privateServerStarted = true
-				s.StartPrivateServer()
-			}()
+			if chatroomStarted {
+				log.Println("聊天室已经启动")
+				mu.Unlock()
+			}
+			chatroomStarted = true
+			chat := NewChat()
+			s.StartChatRoom(chat)
 
-		case 2:
-			//聊天室
-			go func() {
-				mu.Lock()
-				if chatroomStarted {
-					log.Println("聊天室已经启动")
-					mu.Unlock()
-				}
-				chatroomStarted = true
-				chat := NewChat()
-				s.StartChatRoom(chat)
-
-			}()
-		default:
-			goto START
-		}
-
+		}()
+	default:
+		goto START
 	}
+	select {}
 
 }
 
