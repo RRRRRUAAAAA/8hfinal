@@ -12,37 +12,49 @@ import (
 
 // 加入聊天室
 func JoinChatRoom(ip string) {
+	//第一步建立连接
 	conn, err := net.Dial("tcp", ip+":8080")
-
-	readScanner := bufio.NewScanner(conn)
 	if err != nil {
-		log.Println("连接失败:", err)
-		return
+		log.Println("加入聊天室出线错误：", err)
 	}
-	log.Println("成功链接到服务器")
+	log.Println("成功加入聊天室")
 
+	//第二步 接收聊天室发送的消息并且设置用户名
+	readScanner := bufio.NewScanner(conn)
 	if readScanner.Scan() {
-		fmt.Printf(readScanner.Text())
+		fmt.Println(readScanner.Text())
 	}
-	//读取用户名并发送
-
-	writeScanner := bufio.NewScanner(os.Stdin)
-	user := writeScanner.Text()
-	if user != "" {
-		conn.Write([]byte(user + "\n"))
+	writeSacnner := bufio.NewScanner(os.Stdin)
+	if writeSacnner.Scan() {
+		name := writeSacnner.Text()
+		conn.Write([]byte(name + "\n"))
 	}
 
-	//收消息
+	//第三步 开启协程一直监听聊天室
 
 	go func() {
-		for readScanner.Scan() {
-			println(readScanner.Text())
+		for {
+			if readScanner.Scan() {
+				msg := readScanner.Text()
+				fmt.Printf("%s\n", msg)
+			}
 		}
+		log.Println("服务器连接断开或出现错误")
 	}()
 
-	//平时发消息
-	for writeScanner.Scan() {
-		conn.Write([]byte(writeScanner.Text() + "\n"))
+	//第四步 始终维持用户键盘的监听
+	for {
+		if writeSacnner.Scan() {
+			write := writeSacnner.Text()
+			if write != "" {
+				_, err := conn.Write([]byte(write + "\n"))
+				if err != nil {
+					log.Println("发送失败，断开连接", err)
+					return
+				}
+			}
+
+		}
 	}
 }
 

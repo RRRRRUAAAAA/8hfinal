@@ -23,17 +23,12 @@ func NewChat() *ChatRoom {
 func (chat *ChatRoom) Join(conn net.Conn) {
 
 	name := chat.AskName(conn) //询问姓名
-
-	log.Println("检查赋值是否成功：", chat.clients[conn])
 	chat.mu.Lock()
 	chat.clients[conn] = name //为新来的用户赋值姓名
-	println(chat.clients[conn])
 	chat.mu.Unlock()
-
 	chat.BroadCast(conn, fmt.Sprintf("%s 加入聊天室", name)) //广播告知该用户加入聊天室
-
 	go chat.HandleMessage(conn, name)
-	defer log.Println("用户退出聊天室")
+	defer log.Printf("%s成功加入聊天室", name)
 }
 
 // 用来得到用户输入的名字
@@ -43,6 +38,7 @@ func (chat *ChatRoom) AskName(conn net.Conn) string {
 	for scanner.Scan() {
 		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 		text := scanner.Text()
+		conn.Write([]byte(fmt.Sprintf("命名成功，您的用户名是：%s", text+"\n")))
 		return text
 
 	}
@@ -72,7 +68,7 @@ Start1:
 			}
 			targetName := strings.TrimPrefix(split[0], "@")
 			chat.PrivateMessage(conn, fmt.Sprintf("[私聊] 【%s】对你说：%s", name, split[1]), targetName)
-			log.Println("私聊信息已发送...")
+
 		} else {
 			chat.BroadCast(conn, fmt.Sprintf("[%s]: %s\n", name, msg))
 			log.Println("广播信息已经投放...")
