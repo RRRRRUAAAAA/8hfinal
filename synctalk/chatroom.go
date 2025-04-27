@@ -38,10 +38,11 @@ func (chat *ChatRoom) AskName(conn net.Conn) string {
 	for scanner.Scan() {
 		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 		text := scanner.Text()
-		conn.Write([]byte(fmt.Sprintf("命名成功，您的用户名是：%s", text+"\n")))
+		conn.Write([]byte(fmt.Sprintf("命名成功，您的用户名是：%s 退出指令：/exit 查询在线人数指令：/who\n", text+"\n")))
 		return text
 
 	}
+	conn.Write([]byte(fmt.Sprintf("命名成功，您是匿名用户 退出指令：/exit 查询在线人数指令：/who\n" + "\n")))
 	return "匿名"
 }
 
@@ -54,7 +55,7 @@ func (chat *ChatRoom) HandleMessage(conn net.Conn, name string) {
 		}
 	}(conn)
 Start1:
-	conn.Write([]byte("请输入您想输入的内容\n"))
+	conn.Write([]byte("您已经进入聊天室喽\n"))
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
 		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
@@ -69,12 +70,30 @@ Start1:
 			targetName := strings.TrimPrefix(split[0], "@")
 			chat.PrivateMessage(conn, fmt.Sprintf("[私聊] 【%s】对你说：%s", name, split[1]), targetName)
 
+		} else if strings.HasPrefix(msg, "/") {
+			chose := strings.TrimPrefix(msg, "/")
+			switch chose {
+			case "exit":
+				log.Printf("用户%s输入/exit自动退出", name)
+				goto FORFINISH
+			case "who":
+				onlineUsers := make([]string, 0)
+				for _, name := range chat.clients {
+					if name != "" {
+						onlineUsers = append(onlineUsers, name)
+					}
+				}
+				conn.Write([]byte("当前聊天室在线的用户列表如下" +
+					fmt.Sprintf(strings.Join(onlineUsers, " & ")) + "\n"))
+			}
+
 		} else {
 			chat.BroadCast(conn, fmt.Sprintf("[%s]: %s\n", name, msg))
 			log.Println("广播信息已经投放...")
 		}
 
 	}
+FORFINISH:
 	//sanner.Scan()如果断开，意味着用户已经断开
 	chat.mu.Lock()
 	delete(chat.clients, conn)
