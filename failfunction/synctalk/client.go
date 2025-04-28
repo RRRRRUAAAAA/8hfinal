@@ -1,13 +1,12 @@
 package synctalk
 
 import (
-	"8hfinal/utils"
+	"8hfinal/failfunction/utils"
 	"bufio"
 	"fmt"
 	"log"
 	"net"
 	"os"
-	"time"
 )
 
 // 加入聊天室
@@ -83,7 +82,6 @@ func StartPrivateClient(ip string, port int) {
 	//给服务器发送消息
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 		text := scanner.Text()
 		conn.Write([]byte(text + "\n"))
 		log.Println("客户端已经给服务器发出消息", text)

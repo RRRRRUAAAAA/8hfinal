@@ -1,7 +1,7 @@
 package originaldream
 
 import (
-	"8hfinal/utils"
+	"8hfinal/failfunction/utils"
 	"fmt"
 	"log"
 	"net"

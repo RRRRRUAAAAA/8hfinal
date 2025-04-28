@@ -1,7 +1,7 @@
 package main
 
 import (
-	"8hfinal/synctalk"
+	synctalk2 "8hfinal/failfunction/synctalk"
 	"fmt"
 	"log"
 )
@@ -15,10 +15,10 @@ func main() {
 	fmt.Scanln(&chose)
 	switch chose {
 	case 1:
-		server := synctalk.NewServer("0.0.0.0", 8080)
+		server := synctalk2.NewServer("0.0.0.0", 8080)
 		server.DifferentServer()
 	case 2:
-		synctalk.ClientChose()
+		synctalk2.ClientChose()
 
 	}
 }

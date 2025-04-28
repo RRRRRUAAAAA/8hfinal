@@ -1,7 +1,7 @@
 package synctalk
 
 import (
-	"8hfinal/utils"
+	"8hfinal/failfunction/utils"
 	"bufio"
 	"fmt"
 	"log"
