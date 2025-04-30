@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 )
 
 type Status struct {
@@ -16,7 +17,7 @@ type User struct {
 	C      chan string
 }
 
-// 在server建立连接的时候调用直接创建
+// 在server建立连接的时候调用直接创建,同时创建一个服务端
 func NewUser() *User {
 	return &User{
 		C: make(chan string),
@@ -37,15 +38,16 @@ func (u *User) AskUserdetail(conn net.Conn) {
 
 	}
 	name := string(buf[:n])
+	name = strings.TrimSpace(name)
 	u.Name = name
 	fmt.Printf("您的用户名为：%s\n", u.Name)
 	addr := conn.RemoteAddr()
 	u.Addr = addr.String()
 }
-
 func (u *User) Listener() {
-	msgRec := <-u.C
-	fmt.Println(msgRec)
+	for msg := range u.C {
+		fmt.Println("[服务器消息]", msg)
+	}
 }
 
 func (u *User) writter(conn net.Conn) {
@@ -66,4 +68,11 @@ func (u *User) writter(conn net.Conn) {
 			break
 		}
 	}
+}
+func (u *User) Start(conn net.Conn) {
+	// 启动后台监听协程，从 u.C 中读取并打印消息
+	go u.Listener()
+
+	// 主线程运行输入写入逻辑
+	u.writter(conn)
 }

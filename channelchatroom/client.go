@@ -14,12 +14,13 @@ type Client struct {
 	C    chan string
 }
 
-func NewClient(ip string, port int, ch chan string) *Client {
+// 调用newClient同时也会创建一个user
+func NewClient(ip string, port int, usr *User) *Client {
 
 	return &Client{
 		Ip:   ip,
 		Port: port,
-		C:    ch,
+		C:    usr.C,
 	}
 }
 
